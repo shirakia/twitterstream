@@ -13,6 +13,7 @@ It is the simple library to access the [Twitter Streaming API](http://apiwiki.tw
     require "twitter_stream"
 
     ts = TwitterStream.new(USERNAME,PASSWORD)
+    ts.set_ca_file(CA_FILE_PATH)
 
     ts.sample do |status|
       user = status['user']

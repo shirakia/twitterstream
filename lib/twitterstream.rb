@@ -22,8 +22,8 @@ end
 class TwitterStream
   VERSION = '0.2.1'
   @@urls = {
-    'sample' => URI.parse("http://stream.twitter.com/1/statuses/sample.json"),
-    'filter' => URI.parse("http://stream.twitter.com/1/statuses/filter.json"),
+    'sample' => URI.parse("https://stream.twitter.com/1/statuses/sample.json"),
+    'filter' => URI.parse("https://stream.twitter.com/1/statuses/filter.json"),
     'userstreams' => URI.parse('https://userstream.twitter.com/2/user.json?replies=all'),
   }
   
@@ -36,6 +36,10 @@ class TwitterStream
       @access = OAuth::Token.new(params[:access_token], params[:access_secret])
     end
     self
+  end
+  
+  def set_ca_file(ca_file)
+    @ca_file = ca_file
   end
   
   def sample(params=nil)
@@ -101,26 +105,27 @@ class TwitterStream
       end
     end
     
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true if uri.host == "userstream.twitter.com"
-    http.start
-    request = Net::HTTP::Post.new(uri.request_uri)
+    https = Net::HTTP.new(uri.host, uri.port)
+    https.use_ssl = true
+    https.ca_file = @ca_file
+    https.start
+    request = Net::HTTP::Get.new(uri.request_uri)
     request.set_form_data(params) if params
     if @username && @password
       request.basic_auth(@username, @password)
     else
-      request.oauth!(http, @consumer, @access)
+      request.oauth!(https, @consumer, @access)
     end
 
     begin
-      http.request(request) do |response|
+      https.request(request) do |response|
         response.each_line("\r\n") do |line|
           j = JSON.parse(line) rescue next
           yield j
         end
       end
     ensure
-      http.finish
+      https.finish
     end
   end
 end

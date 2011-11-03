@@ -3,6 +3,7 @@ require "./lib/twitterstream"
 abort 'usage: username password' if ARGV.length < 2
 
 ts = TwitterStream.new({ :username => ARGV[0], :password =>ARGV[1] })
+ts.set_ca_file(CA_FILE_PATH)
 
 puts "sample"
 i = 0
